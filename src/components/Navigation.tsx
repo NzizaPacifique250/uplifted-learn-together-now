@@ -27,17 +27,17 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#subjects" className="text-foreground hover:text-primary transition-colors font-medium">
-              Subjects
+            <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium">
+              Browse Questions
+            </a>
+            <a href="/ask" className="text-foreground hover:text-primary transition-colors font-medium">
+              Ask Question
             </a>
             <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium">
               Study Groups
             </a>
             <a href="#community" className="text-foreground hover:text-primary transition-colors font-medium">
               Community
-            </a>
-            <a href="#resources" className="text-foreground hover:text-primary transition-colors font-medium">
-              Resources
             </a>
           </div>
 
@@ -74,17 +74,17 @@ const Navigation = () => {
         {isOpen && (
           <div className="md:hidden border-t border-border py-4">
             <div className="flex flex-col gap-4">
-              <a href="#subjects" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
-                Subjects
+              <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
+                Browse Questions
+              </a>
+              <a href="/ask" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
+                Ask Question
               </a>
               <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Study Groups
               </a>
               <a href="#community" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Community
-              </a>
-              <a href="#resources" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
-                Resources
               </a>
               <div className="flex flex-col gap-2 px-4 pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground">{user?.email}</div>
