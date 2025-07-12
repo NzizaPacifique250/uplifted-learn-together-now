@@ -28,12 +28,9 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium">
-              Browse Questions
-            </a>
-            <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium">
               Asked Questions
             </a>
-            <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium">
+            <a href="/study-groups" className="text-foreground hover:text-primary transition-colors font-medium">
               Study Groups
             </a>
             <a href="#community" className="text-foreground hover:text-primary transition-colors font-medium">
@@ -75,12 +72,9 @@ const Navigation = () => {
           <div className="md:hidden border-t border-border py-4">
             <div className="flex flex-col gap-4">
               <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
-                Browse Questions
-              </a>
-              <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Asked Questions
               </a>
-              <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
+              <a href="/study-groups" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Study Groups
               </a>
               <a href="#community" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">

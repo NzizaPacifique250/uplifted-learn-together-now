@@ -10,6 +10,9 @@ import AuthPage from "./components/AuthPage";
 import Questions from "./pages/Questions";
 import AskQuestion from "./pages/AskQuestion";
 import QuestionDetail from "./pages/QuestionDetail";
+import StudyGroups from "./pages/StudyGroups";
+import CreateGroup from "./pages/CreateGroup";
+import GroupDetail from "./pages/GroupDetail";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +74,21 @@ const App = () => (
             <Route path="/ask" element={
               <ProtectedRoute>
                 <AskQuestion />
+              </ProtectedRoute>
+            } />
+            <Route path="/study-groups" element={
+              <ProtectedRoute>
+                <StudyGroups />
+              </ProtectedRoute>
+            } />
+            <Route path="/create-group" element={
+              <ProtectedRoute>
+                <CreateGroup />
+              </ProtectedRoute>
+            } />
+            <Route path="/groups/:id" element={
+              <ProtectedRoute>
+                <GroupDetail />
               </ProtectedRoute>
             } />
             <Route path="/auth" element={
