@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MessageSquare, ThumbsUp, Clock, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SearchBar from "@/components/questions/SearchBar";
+import SubjectFilter from "@/components/questions/SubjectFilter";
+import SubjectSidebar from "@/components/questions/SubjectSidebar";
+import QuestionsList from "@/components/questions/QuestionsList";
 
 interface Question {
   id: string;
@@ -80,13 +79,6 @@ const Questions = () => {
     setFilteredQuestions(filtered);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   if (loading) {
     return (
@@ -115,118 +107,27 @@ const Questions = () => {
               </Link>
             </div>
 
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search questions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <SearchBar 
+              searchTerm={searchTerm} 
+              onSearchChange={setSearchTerm} 
+            />
 
             {/* Subject Filter */}
-            <Tabs value={selectedSubject} onValueChange={setSelectedSubject} className="mb-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-5">
-                <TabsTrigger value="all">All</TabsTrigger>
-                {subjects.slice(0, 4).map(subject => (
-                  <TabsTrigger key={subject} value={subject} className="text-xs">
-                    {subject}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <SubjectFilter 
+              selectedSubject={selectedSubject}
+              onSubjectChange={setSelectedSubject}
+              subjects={subjects}
+            />
 
             {/* Questions List */}
-            <div className="space-y-4">
-              {filteredQuestions.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground">No questions found. Be the first to ask!</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                filteredQuestions.map((question) => (
-                  <Card key={question.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <Link to={`/questions/${question.id}`}>
-                            <CardTitle className="hover:text-primary transition-colors cursor-pointer">
-                              {question.title}
-                            </CardTitle>
-                          </Link>
-                          <p className="text-muted-foreground mt-2 line-clamp-2">
-                            {question.content}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">{question.subject}</Badge>
-                          <Badge variant="outline">{question.grade_level}</Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-wrap gap-2">
-                          {question.tags.map((tag, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <ThumbsUp className="h-4 w-4" />
-                            <span>{question.votes}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MessageSquare className="h-4 w-4" />
-                            <span>{question.answer_count}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{formatDate(question.created_at)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
+            <QuestionsList questions={filteredQuestions} />
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:w-80">
-            <Card>
-              <CardHeader>
-                <CardTitle>Browse by Subject</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button
-                    variant={selectedSubject === 'all' ? 'default' : 'ghost'}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedSubject('all')}
-                  >
-                    All Subjects
-                  </Button>
-                  {subjects.map(subject => (
-                    <Button
-                      key={subject}
-                      variant={selectedSubject === subject ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedSubject(subject)}
-                    >
-                      {subject}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <SubjectSidebar 
+            selectedSubject={selectedSubject}
+            onSubjectChange={setSelectedSubject}
+            subjects={subjects}
+          />
         </div>
         </div>
       </div>
