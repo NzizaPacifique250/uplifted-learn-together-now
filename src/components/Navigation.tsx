@@ -30,8 +30,8 @@ const Navigation = () => {
             <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium">
               Browse Questions
             </a>
-            <a href="/ask" className="text-foreground hover:text-primary transition-colors font-medium">
-              Ask Question
+            <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium">
+              Asked Questions
             </a>
             <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium">
               Study Groups
@@ -77,8 +77,8 @@ const Navigation = () => {
               <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Browse Questions
               </a>
-              <a href="/ask" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
-                Ask Question
+              <a href="/questions" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
+                Asked Questions
               </a>
               <a href="#study-groups" className="text-foreground hover:text-primary transition-colors font-medium px-4 py-2">
                 Study Groups

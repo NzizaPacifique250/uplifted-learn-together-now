@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -101,6 +101,18 @@ const AskQuestion = () => {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader>
+              <div className="flex items-center gap-4 mb-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/questions')}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Questions
+                </Button>
+              </div>
               <CardTitle className="text-2xl">Ask a Question</CardTitle>
               <p className="text-muted-foreground">
                 Get help from the community by asking a clear, detailed question.
