@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -308,6 +308,10 @@ export type Database = {
       get_group_member_count: {
         Args: { group_id: string }
         Returns: number
+      }
+      is_group_member: {
+        Args: { group_id: string; user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
