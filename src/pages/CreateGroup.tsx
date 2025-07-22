@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +19,43 @@ const CreateGroup = () => {
   const [subject, setSubject] = useState('');
   const [memberLimit, setMemberLimit] = useState('20');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const subjects = ['Math', 'Science', 'History', 'English', 'Computer Science', 'Physics', 'Chemistry', 'Biology'];
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found" error
+      
+      setIsAdmin(!!data);
+    } catch (error: any) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +124,50 @@ const CreateGroup = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-foreground">Loading...</div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Please Log In</h2>
+            <p className="text-muted-foreground mb-4">You need to be logged in to create a study group.</p>
+            <Button onClick={() => navigate('/study-groups')}>Back to Study Groups</Button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Admin Access Required</h2>
+            <p className="text-muted-foreground mb-4">Only administrators can create study groups.</p>
+            <Button onClick={() => navigate('/study-groups')}>Back to Study Groups</Button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>

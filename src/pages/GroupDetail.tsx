@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Send, MessageSquare } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Users, Send, MessageSquare, Clock, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,14 +46,31 @@ interface GroupMessage {
   } | null;
 }
 
+interface JoinRequest {
+  id: string;
+  group_id: string;
+  user_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  message: string | null;
+  requested_at: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [group, setGroup] = useState<StudyGroup | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [requestMessage, setRequestMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasExistingRequest, setHasExistingRequest] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -71,7 +89,10 @@ const GroupDetail = () => {
       fetchMessages();
       setupRealtimeSubscription();
     }
-  }, [isMember, id]);
+    if (isAdmin && id) {
+      fetchJoinRequests();
+    }
+  }, [isMember, isAdmin, id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -118,10 +139,23 @@ const GroupDetail = () => {
 
       setMembers(membersWithProfiles);
 
-      // Check if current user is a member
+      // Check if current user is a member and their role
       if (user) {
         const userMembership = membersData?.find(member => member.user_id === user.id);
         setIsMember(!!userMembership);
+        setIsAdmin(userMembership?.role === 'admin' || false);
+        
+        // Check if user has existing join request
+        if (!userMembership) {
+          const { data: requestData } = await supabase
+            .from('join_requests')
+            .select('id')
+            .eq('group_id', id)
+            .eq('user_id', user.id)
+            .eq('status', 'pending')
+            .single();
+          setHasExistingRequest(!!requestData);
+        }
       }
 
     } catch (error: any) {
@@ -216,36 +250,119 @@ const GroupDetail = () => {
     };
   };
 
-  const joinGroup = async () => {
+  const fetchJoinRequests = async () => {
+    try {
+      const { data: requestsData, error } = await supabase
+        .from('join_requests')
+        .select('*')
+        .eq('group_id', id)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      // Fetch profiles for request authors
+      const userIds = requestsData?.map(r => r.user_id) || [];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', userIds);
+
+      // Combine requests with profiles
+      const requestsWithProfiles = requestsData?.map(request => ({
+        ...request,
+        status: request.status as 'pending' | 'approved' | 'rejected',
+        profiles: profilesData?.find(p => p.user_id === request.user_id) || null
+      })) || [];
+
+      setJoinRequests(requestsWithProfiles);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error loading join requests",
+        description: error.message,
+      });
+    }
+  };
+
+  const requestToJoin = async () => {
     if (!user) {
       toast({
         variant: "destructive",
         title: "Please log in",
-        description: "You need to be logged in to join a study group.",
+        description: "You need to be logged in to request joining a study group.",
       });
       return;
     }
 
     try {
       const { error } = await supabase
-        .from('group_memberships')
+        .from('join_requests')
         .insert({
           group_id: id,
-          user_id: user.id
+          user_id: user.id,
+          message: requestMessage.trim() || null
         });
 
       if (error) throw error;
 
       toast({
-        title: "Joined study group!",
-        description: "You have successfully joined the study group.",
+        title: "Join request sent!",
+        description: "Your join request has been sent to the group admin.",
       });
 
-      fetchGroupData();
+      setHasExistingRequest(true);
+      setRequestMessage('');
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error joining group",
+        title: "Error sending join request",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleJoinRequest = async (requestId: string, action: 'approved' | 'rejected') => {
+    try {
+      // Update join request status
+      const { data: requestData, error: updateError } = await supabase
+        .from('join_requests')
+        .update({
+          status: action,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id
+        })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // If approved, add user to group
+      if (action === 'approved') {
+        const { error: membershipError } = await supabase
+          .from('group_memberships')
+          .insert({
+            group_id: id,
+            user_id: requestData.user_id
+          });
+
+        if (membershipError) throw membershipError;
+      }
+
+      toast({
+        title: `Request ${action}!`,
+        description: `The join request has been ${action}.`,
+      });
+
+      // Refresh data
+      fetchJoinRequests();
+      if (action === 'approved') {
+        fetchGroupData();
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: `Error ${action === 'approved' ? 'approving' : 'rejecting'} request`,
         description: error.message,
       });
     }
@@ -350,12 +467,20 @@ const GroupDetail = () => {
                     </div>
                   </div>
                 </div>
-                {!isMember && (
+                {!isMember && !hasExistingRequest && (
                   <Button 
-                    onClick={joinGroup}
+                    onClick={() => {
+                      // Show request form
+                    }}
                     disabled={members.length >= group.member_limit}
                   >
-                    {members.length >= group.member_limit ? 'Group Full' : 'Join Group'}
+                    {members.length >= group.member_limit ? 'Group Full' : 'Request to Join'}
+                  </Button>
+                )}
+                {hasExistingRequest && (
+                  <Button disabled variant="outline" className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Request Pending
                   </Button>
                 )}
               </div>
@@ -378,6 +503,12 @@ const GroupDetail = () => {
                   <Users className="w-4 h-4" />
                   Members ({members.length})
                 </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="requests" className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Join Requests ({joinRequests.length})
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="chat">
@@ -468,23 +599,151 @@ const GroupDetail = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="requests">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Pending Join Requests</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {joinRequests.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No pending join requests
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {joinRequests.map((request) => (
+                            <div key={request.id} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <Avatar>
+                                    <AvatarFallback>
+                                      {getUserDisplayName(request.profiles).charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1">
+                                    <p className="font-medium">{getUserDisplayName(request.profiles)}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Requested {new Date(request.requested_at).toLocaleDateString()}
+                                    </p>
+                                    {request.message && (
+                                      <p className="text-sm mt-2 p-2 bg-muted rounded">{request.message}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleJoinRequest(request.id, 'approved')}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleJoinRequest(request.id, 'rejected')}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <X className="w-4 h-4" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
             </Tabs>
           ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Join the Group</h3>
-                <p className="text-muted-foreground mb-4">
-                  You need to join this study group to see the chat and member list.
-                </p>
-                <Button 
-                  onClick={joinGroup}
-                  disabled={members.length >= group.member_limit}
-                >
-                  {members.length >= group.member_limit ? 'Group Full' : 'Join Group'}
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Members List for Non-Members */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Group Members</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {members.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback>
+                              {getUserDisplayName(member.profiles).charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{getUserDisplayName(member.profiles)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Joined {new Date(member.joined_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        {member.role === 'admin' && (
+                          <Badge variant="secondary">Admin</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Join Request Form */}
+              {!hasExistingRequest && members.length < group.member_limit && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Request to Join</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Send a request to join this study group. The admin will review your request.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Message (optional)</label>
+                      <Textarea
+                        placeholder="Tell the admin why you want to join this group..."
+                        value={requestMessage}
+                        onChange={(e) => setRequestMessage(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                    <Button onClick={requestToJoin} className="w-full">
+                      Send Join Request
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasExistingRequest && (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Clock className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Request Pending</h3>
+                    <p className="text-muted-foreground">
+                      Your join request is pending approval from the group admin.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {members.length >= group.member_limit && (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Group is Full</h3>
+                    <p className="text-muted-foreground">
+                      This study group has reached its maximum member limit.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </div>

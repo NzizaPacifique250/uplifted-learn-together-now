@@ -31,6 +31,7 @@ const StudyGroups = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -38,6 +39,7 @@ const StudyGroups = () => {
 
   useEffect(() => {
     fetchStudyGroups();
+    checkAdminStatus();
   }, [user]);
 
   useEffect(() => {
@@ -98,6 +100,28 @@ const StudyGroups = () => {
     }
   };
 
+  const checkAdminStatus = async () => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setIsAdmin(!!data);
+    } catch (error: any) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
+
   const filterGroups = () => {
     let filtered = groups;
 
@@ -115,41 +139,6 @@ const StudyGroups = () => {
     setFilteredGroups(filtered);
   };
 
-  const joinGroup = async (groupId: string) => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Please log in",
-        description: "You need to be logged in to join a study group.",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('group_memberships')
-        .insert({
-          group_id: groupId,
-          user_id: user.id
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Joined study group!",
-        description: "You have successfully joined the study group.",
-      });
-
-      // Refresh the groups list
-      fetchStudyGroups();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error joining group",
-        description: error.message,
-      });
-    }
-  };
 
   if (loading) {
     return (
@@ -174,12 +163,14 @@ const StudyGroups = () => {
               <h1 className="text-3xl font-bold text-foreground mb-2">Study Groups</h1>
               <p className="text-muted-foreground">Join study groups to collaborate with other students</p>
             </div>
-            <Link to="/create-group">
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create Group
-              </Button>
-            </Link>
+            {isAdmin && (
+              <Link to="/create-group">
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Group
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Search and Filter */}
@@ -216,9 +207,11 @@ const StudyGroups = () => {
                   ? "Try adjusting your search criteria." 
                   : "Be the first to create a study group!"}
               </p>
-              <Link to="/create-group">
-                <Button>Create First Group</Button>
-              </Link>
+              {isAdmin && (
+                <Link to="/create-group">
+                  <Button>Create First Group</Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -247,24 +240,11 @@ const StudyGroups = () => {
                       </p>
                     )}
                     <div className="flex gap-2">
-                      {group.is_member ? (
-                        <Link to={`/groups/${group.id}`} className="flex-1">
-                          <Button className="w-full">View Group</Button>
-                        </Link>
-                      ) : (
-                        <>
-                          <Button
-                            onClick={() => joinGroup(group.id)}
-                            className="flex-1"
-                            disabled={group.member_count >= group.member_limit}
-                          >
-                            {group.member_count >= group.member_limit ? 'Full' : 'Join'}
-                          </Button>
-                          <Link to={`/groups/${group.id}`}>
-                            <Button variant="outline">View</Button>
-                          </Link>
-                        </>
-                      )}
+                      <Link to={`/groups/${group.id}`} className="flex-1">
+                        <Button className="w-full" variant={group.is_member ? "default" : "outline"}>
+                          {group.is_member ? 'View Group' : 'View Details'}
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
