@@ -17,13 +17,13 @@ const Footer = () => {
               Empowering students to learn together, share knowledge, and uplift each other's educational journey through collaborative learning.
             </p>
             <div className="flex items-center gap-4 mt-6">
-              <a href="#" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
+              <a href="https://x.com/AimeNziza" target="_blank" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
+              <a href="https://github.com/" target="_blank" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
                 <Github className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
+              <a href="mailto:paccynziza@gmail.com" className="bg-primary-foreground/10 p-2 rounded-lg hover:bg-primary-foreground/20 transition-colors">
                 <Mail className="h-5 w-5" />
               </a>
             </div>
@@ -35,7 +35,8 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><a href="#subjects" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Browse Subjects</a></li>
               <li><a href="#study-groups" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Study Groups</a></li>
-              <li><a href="#community" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Community</a></li>
+             {/* This will come in next version */}
+              {/* <li><a href="#community" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Community</a></li> */}
               <li><a href="#resources" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Resources</a></li>
             </ul>
           </div>
@@ -54,10 +55,10 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/20 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-primary-foreground/60 text-sm">
-            © 2024 Uplifted. All rights reserved.
+            © 2025 Uplifted. All rights reserved.
           </p>
           <p className="text-primary-foreground/60 text-sm flex items-center gap-1 mt-4 md:mt-0">
-            Made with <Heart className="h-4 w-4 text-red-400" /> for learners everywhere
+            Made by <a href="https://www.linkedin.com/in/nziza-aime-pacifique/" target="_blank" className="text-primary-foreground hover:text-primary-foreground/80 transition-colors">Nziza</a> with <Heart className="h-4 w-4 text-red-400" /> for learners everywhere
           </p>
         </div>
       </div>

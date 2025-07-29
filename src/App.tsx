@@ -13,6 +13,7 @@ import QuestionDetail from "./pages/QuestionDetail";
 import StudyGroups from "./pages/StudyGroups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
+import CommunityPage from "./pages/communityPage";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,11 @@ const App = () => (
                 <StudyGroups />
               </ProtectedRoute>
             } />
+            {/* <Route path="/community" element={
+              <ProtectedRoute>
+                <CommunityPage />
+              </ProtectedRoute>
+            } /> */}
             <Route path="/create-group" element={
               <ProtectedRoute>
                 <CreateGroup />
