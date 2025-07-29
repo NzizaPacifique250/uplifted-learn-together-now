@@ -13,6 +13,7 @@ import QuestionDetail from "./pages/QuestionDetail";
 import StudyGroups from "./pages/StudyGroups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
+import EditProfile from "./pages/EditProfile";
 import CommunityPage from "./pages/communityPage";
 
 const queryClient = new QueryClient();
@@ -95,6 +96,11 @@ const App = () => (
             <Route path="/groups/:id" element={
               <ProtectedRoute>
                 <GroupDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-profile" element={
+              <ProtectedRoute>
+                <EditProfile />
               </ProtectedRoute>
             } />
             <Route path="/auth" element={

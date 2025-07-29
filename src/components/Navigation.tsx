@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Menu, X, LogOut, User } from "lucide-react";
+import { GraduationCap, Menu, X, LogOut, User, Settings } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
@@ -53,6 +55,13 @@ const Navigation = () => {
                 <DropdownMenuItem className="font-medium">
                   {user?.email}
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/edit-profile" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -86,6 +95,12 @@ const Navigation = () => {
               </a> */}
               <div className="flex flex-col gap-2 px-4 pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground">{user?.email}</div>
+                <Button variant="ghost" className="justify-start" asChild>
+                  <Link to="/edit-profile">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                </Button>
                 <Button variant="ghost" className="justify-start" onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
