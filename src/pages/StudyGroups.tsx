@@ -203,9 +203,11 @@ const StudyGroups = () => {
               <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">No study groups found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || selectedSubject !== 'all' 
-                  ? "Try adjusting your search criteria." 
-                  : "Be the first to create a study group!"}
+                {isAdmin
+                  ? "Go ahead and create a first study group!"
+                  : (searchTerm || selectedSubject !== 'all'
+                    ? "Try adjusting your search criteria."
+                    : "No public study groups available at the moment.")}
               </p>
               {isAdmin && (
                 <Link to="/create-group">
